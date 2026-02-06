@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Tính Khối Lượng Gỗ</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -52,61 +51,56 @@
             body {
                 background-color: white;
                 -webkit-print-color-adjust: exact;
+                font-size: 11px; /* Font nhỏ hơn khi in để tiết kiệm giấy */
+                height: auto !important; /* Reset chiều cao khi in */
+                overflow: visible !important;
             }
             .no-print {
                 display: none !important;
             }
-            .print-only {
+            .print-visible {
                 display: block !important;
             }
+            /* Ẩn giao diện bảng trên màn hình khi in */
+            #screenTableContainer {
+                display: none !important;
+            }
+            /* Hiển thị giao diện in 2 cột */
+            #printSection {
+                display: block !important;
+            }
+            
+            /* Cấu hình chia cột */
+            .print-columns {
+                column-count: 2;
+                column-gap: 2rem;
+                width: 100%;
+            }
+            
+            /* Ngăn ngắt dòng giữa chừng trong một khối */
+            .avoid-break {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
             .shadow-lg, .shadow-md, .rounded-lg, .rounded-xl {
                 box-shadow: none !important;
                 border-radius: 0 !important;
                 border: none !important;
             }
-            table {
-                border-collapse: collapse;
-                width: 100%;
-                font-size: 12px;
-            }
-            th, td {
-                border: 1px solid black !important;
-                padding: 4px !important;
-            }
-            /* Đảm bảo tiêu đề bảng có nền xám khi in */
-            thead th {
-                background-color: #e5e7eb !important;
-                color: black !important;
-            }
-            /* Ẩn cột hành động khi in */
-            .action-col {
-                display: none !important;
-            }
-            /* Màu nền cho dòng được chọn khi in (tùy chọn, thường để trắng) */
-            .bg-blue-200 {
-                background-color: white !important;
-            }
-            /* Màu tiêu đề nhóm khi in */
-            .group-header {
-                background-color: #f3f4f6 !important;
-                font-weight: bold;
-            }
-            /* Màu nền cho dòng tổng phụ khi in */
-            .subtotal-row {
-                background-color: #f9fafb !important;
-                font-weight: bold;
-            }
-            /* Ngắt trang thông minh cho bảng */
-            tr {
-                page-break-inside: avoid;
+            
+            /* Reset layout cho in ấn */
+            main {
+                overflow: visible !important;
+                height: auto !important;
             }
         }
     </style>
 </head>
-<body class="text-gray-800 p-4 min-h-screen flex flex-col">
+<body class="text-gray-800 p-4 h-screen flex flex-col overflow-hidden">
 
     <!-- Header & Controls -->
-    <header class="max-w-5xl mx-auto w-full mb-6 no-print">
+    <header class="max-w-5xl mx-auto w-full mb-4 no-print flex-none">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-md">
             <div>
                 <h1 class="text-2xl font-bold text-blue-800 uppercase tracking-wide"><i class="fas fa-tree mr-2"></i>Tính Khối Lượng Gỗ</h1>
@@ -127,7 +121,7 @@
     </header>
 
     <!-- Input Area -->
-    <section class="max-w-5xl mx-auto w-full mb-6 no-print sticky top-2 z-10">
+    <section class="max-w-5xl mx-auto w-full mb-4 no-print flex-none z-20">
         <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-100">
             <form id="addForm" onsubmit="event.preventDefault(); addItem();" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 
@@ -146,17 +140,17 @@
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-gray-600 mb-1">DÀY (mm)</label>
-                    <input type="number" step="0.1" id="inputThick" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono" required placeholder="Ví dụ: 20">
+                    <input type="number" id="inputThick" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono" required placeholder="Ví dụ: 20">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-gray-600 mb-1">RỘNG (cm)</label>
-                    <input type="number" step="0.1" id="inputWidth" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono" required placeholder="Ví dụ: 30">
+                    <input type="number" id="inputWidth" oninput="if(this.value.length > 2) this.value = this.value.slice(0, 2);" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono" required placeholder="Ví dụ: 30">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-gray-600 mb-1">DÀI (x10cm)</label>
-                    <input type="number" step="0.1" id="inputLength" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono" required placeholder="Ví dụ: 25">
+                    <input type="number" id="inputLength" oninput="if(this.value.length > 2) this.value = this.value.slice(0, 2);" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono" required placeholder="Ví dụ: 25">
                 </div>
 
                 <div class="md:col-span-3">
@@ -168,27 +162,25 @@
         </div>
     </section>
 
-    <!-- Main Content for Print & View -->
-    <main class="max-w-5xl mx-auto w-full bg-white rounded-xl shadow-md overflow-hidden flex-grow flex flex-col">
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto w-full bg-white rounded-xl shadow-md overflow-hidden flex-1 flex flex-col relative min-h-0">
         
         <!-- Header Print Only -->
-        <div class="hidden print-only p-4 border-b text-center">
-            <h1 class="text-2xl font-bold uppercase">Bảng Kê Chi Tiết Gỗ Xẻ</h1>
+        <div class="hidden print-visible p-4 pb-2 border-b text-center mb-4">
+            <h1 class="text-2xl font-bold uppercase">Bảng Kê Chi Tiết</h1>
             <p class="text-sm text-gray-600 mt-1">Ngày: <span id="printDate"></span></p>
         </div>
 
-        <!-- Main Table -->
-        <div class="overflow-x-auto">
+        <!-- SCREEN TABLE CONTAINER (Hiển thị trên màn hình - Có thanh cuộn riêng) -->
+        <div id="screenTableContainer" class="overflow-y-auto overflow-x-auto flex-1 relative">
             <table class="w-full text-left border-collapse">
-                <thead class="bg-blue-50 text-blue-900 border-b border-blue-200">
+                <thead class="bg-blue-50 text-blue-900 border-b border-blue-200 sticky top-0 shadow-sm z-10">
                     <tr>
-                        <th class="p-3 text-center w-12 border-r border-blue-100 font-bold">STT</th>
-                        <!-- Removed Wood Type Column Header -->
-                        <!-- Removed Thick Column Header -->
-                        <th class="p-3 text-center border-r border-blue-100 font-bold">Rộng <span class="text-xs font-normal text-gray-500">(cm)</span></th>
-                        <th class="p-3 text-center border-r border-blue-100 font-bold">Dài <span class="text-xs font-normal text-gray-500">(x10cm)</span></th>
-                        <th class="p-3 text-right font-bold">Khối Lượng <span class="text-xs font-normal text-gray-500">(m³)</span></th>
-                        <th class="p-3 text-center action-col w-24 no-print">Tác vụ</th>
+                        <th class="p-2 text-center w-12 border-r border-blue-100 font-bold text-sm bg-blue-50">STT</th>
+                        <th class="p-2 text-center border-r border-blue-100 font-bold text-sm bg-blue-50">Rộng <span class="text-xs font-normal text-gray-500">(cm)</span></th>
+                        <th class="p-2 text-center border-r border-blue-100 font-bold text-sm bg-blue-50">Dài <span class="text-xs font-normal text-gray-500">(x10cm)</span></th>
+                        <th class="p-2 text-right font-bold text-sm bg-blue-50">Khối Lượng <span class="text-xs font-normal text-gray-500">(m³)</span></th>
+                        <th class="p-2 text-center action-col w-28 no-print text-sm bg-blue-50">Tác vụ</th>
                     </tr>
                 </thead>
                 <tbody id="woodTableBody">
@@ -197,14 +189,21 @@
             </table>
         </div>
 
+        <!-- PRINT SECTION CONTAINER (Chỉ hiển thị khi in - Chia 2 cột) -->
+        <div id="printSection" class="hidden px-4 pb-4">
+            <div id="printColumns" class="print-columns">
+                <!-- Nội dung in được sinh ra bởi JS -->
+            </div>
+        </div>
+
         <!-- No Data Message -->
-        <div id="emptyState" class="p-8 text-center text-gray-400">
+        <div id="emptyState" class="p-8 text-center text-gray-400 absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-white z-0 hidden">
             <i class="fas fa-clipboard-list text-4xl mb-3"></i>
             <p>Chưa có dữ liệu gỗ. Vui lòng nhập thông tin ở trên.</p>
         </div>
 
         <!-- Summary Section (Separated by Type) - Hidden on Print -->
-        <div class="p-6 border-t border-dashed border-gray-300 bg-gray-50 mt-auto no-print">
+        <div class="p-6 border-t border-dashed border-gray-300 bg-gray-50 flex-none no-print shadow-[0_-5px_10px_rgba(0,0,0,0.05)] z-20">
             <h3 class="text-lg font-bold text-gray-700 uppercase mb-3 border-l-4 border-blue-500 pl-3">Tổng Hợp Theo Loại Hàng</h3>
             <div id="summaryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <!-- Summary cards generated here -->
@@ -243,15 +242,15 @@
                 <div class="grid grid-cols-3 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Dày (mm)</label>
-                        <input type="number" step="0.1" id="editThick" class="w-full mt-1 p-2 border rounded-md text-center">
+                        <input type="number" id="editThick" class="w-full mt-1 p-2 border rounded-md text-center">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Rộng (cm)</label>
-                        <input type="number" step="0.1" id="editWidth" class="w-full mt-1 p-2 border rounded-md text-center">
+                        <input type="number" id="editWidth" oninput="if(this.value.length > 2) this.value = this.value.slice(0, 2);" class="w-full mt-1 p-2 border rounded-md text-center">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Dài (x10)</label>
-                        <input type="number" step="0.1" id="editLength" class="w-full mt-1 p-2 border rounded-md text-center">
+                        <input type="number" id="editLength" oninput="if(this.value.length > 2) this.value = this.value.slice(0, 2);" class="w-full mt-1 p-2 border rounded-md text-center">
                     </div>
                 </div>
             </div>
@@ -373,6 +372,15 @@
             document.getElementById('inputWidth').value = "";
             document.getElementById('inputLength').value = "";
             document.getElementById('inputWidth').focus();
+
+            // SCROLL TO NEW ITEM LOGIC
+            // Delay slightly to allow DOM render
+            setTimeout(() => {
+                const selectedRow = document.querySelector(`tr[data-id="${newItem.id}"]`);
+                if(selectedRow) {
+                    selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 50);
         }
 
         function selectItem(id) {
@@ -523,117 +531,182 @@
         // --- RENDERING ---
         function renderTable() {
             const tbody = document.getElementById('woodTableBody');
+            const printCols = document.getElementById('printColumns');
             const emptyState = document.getElementById('emptyState');
             
+            // Clear content
             tbody.innerHTML = '';
+            printCols.innerHTML = '';
+            
             let totalVol = 0;
             let groupVol = 0;
             let groupSTT = 1;
+            let currentGroupHTML = ''; // To store print html for current group
 
             if (items.length === 0) {
-                emptyState.style.display = 'block';
+                emptyState.style.display = 'flex';
+                emptyState.classList.remove('hidden');
                 return;
             }
             emptyState.style.display = 'none';
+            emptyState.classList.add('hidden');
 
+            // --- MAIN LOOP ---
             items.forEach((item, index) => {
-                // UPDATE: Grouping Logic (Type OR Thickness change)
                 let isNewGroup = false;
                 if (index === 0) {
                     isNewGroup = true;
                 } else {
                     const prev = items[index-1];
-                    // Change if Type differs OR Thickness differs
                     if (prev.type !== item.type || prev.thick !== item.thick) {
                         isNewGroup = true;
                     }
                 }
                 
-                // UPDATE: Render Subtotal for previous group before starting new one
+                // --- CLOSE PREVIOUS GROUP ---
                 if (isNewGroup && index > 0) {
-                     const prev = items[index-1];
-                     const subTr = document.createElement('tr');
-                     // colSpan reduced by 2 (Both Type and Thickness columns are removed)
-                     subTr.className = "subtotal-row bg-gray-100 font-bold text-gray-700 italic border-b border-gray-300";
-                     subTr.innerHTML = `
-                        <td colspan="3" class="p-2 text-right text-sm">Tổng ${prev.type} (${prev.thick}mm):</td>
+                    const prev = items[index-1];
+                    
+                    // 1. Screen Table: Add Subtotal Row
+                    const subTr = document.createElement('tr');
+                    subTr.className = "subtotal-row bg-gray-100 font-bold text-gray-700 italic border-b border-gray-300";
+                    subTr.innerHTML = `
+                        <td colspan="3" class="p-2 text-right text-xs">Tổng ${prev.type} (${prev.thick}mm):</td>
                         <td class="p-2 text-right text-blue-800 text-sm">${volumeFormatter.format(groupVol)}</td>
                         <td class="action-col no-print"></td>
                     `;
                     tbody.appendChild(subTr);
-                    
-                    // Reset group counters
+
+                    // 2. Print View: Close div and append to columns
+                    currentGroupHTML += `
+                        <div class="flex justify-between border-t border-black font-bold mt-1 pt-1">
+                            <span class="text-[10px] italic">Tổng:</span>
+                            <span>${volumeFormatter.format(groupVol)}</span>
+                        </div>
+                    </div>`; // Close group-container
+                    printCols.innerHTML += currentGroupHTML;
+
+                    // Reset counters
                     groupVol = 0;
                     groupSTT = 1;
                 }
 
-                // UPDATE: Render Group Header
+                // --- OPEN NEW GROUP ---
                 if (isNewGroup) {
+                    // 1. Screen Table: Header Row
                     const headerTr = document.createElement('tr');
                     headerTr.className = "group-header bg-blue-100 text-blue-900";
-                    // Display Type and Thickness in header. colSpan reduced by 2.
                     headerTr.innerHTML = `
-                        <td colspan="5" class="p-2 pl-4 font-bold uppercase border-t-2 border-blue-200">
-                            <i class="fas fa-layer-group mr-2"></i> ${item.type} <span class="text-sm font-normal text-gray-600 normal-case">- Dày: ${item.thick}mm</span>
+                        <td colspan="5" class="p-2 pl-3 font-bold uppercase border-t-2 border-blue-200 text-sm">
+                            <i class="fas fa-layer-group mr-2"></i> ${item.type} <span class="text-xs font-normal text-gray-600 normal-case">- Dày: ${item.thick}mm</span>
                         </td>
                     `;
                     tbody.appendChild(headerTr);
+
+                    // 2. Print View: Start new Block
+                    currentGroupHTML = `
+                    <div class="mb-4 break-inside-avoid avoid-break">
+                        <div class="font-bold border-b border-black text-xs uppercase mb-1">
+                            ${item.type} - ${item.thick}mm
+                        </div>
+                        <div class="flex justify-between text-[10px] text-gray-500 border-b border-gray-200 mb-1 italic">
+                            <span class="w-8">STT</span>
+                            <span class="w-12 text-center">Rộng</span>
+                            <span class="w-12 text-center">Dài</span>
+                            <span class="text-right flex-1">Khối Lượng</span>
+                        </div>
+                    `;
                 }
 
                 // Update Volumes
                 totalVol += item.volume;
                 groupVol += item.volume;
 
-                // Check selection
+                // --- RENDER ITEMS ---
+                
+                // 1. Screen Table Row
                 const isSelected = item.id === selectedId;
                 const rowClass = isSelected ? 'bg-blue-200 cursor-pointer' : 'hover:bg-blue-50 cursor-pointer transition duration-150';
 
                 const tr = document.createElement('tr');
                 tr.className = `${rowClass} border-b border-gray-100`;
+                // Add ID to row for scrolling
+                tr.dataset.id = item.id;
                 tr.onclick = (e) => {
                     if(e.target.closest('button')) return;
                     selectItem(item.id);
                 };
 
-                // Cells - Type and Thick columns removed
+                // Changed p-3 to p-1 for compactness, added flex container for buttons
                 tr.innerHTML = `
-                    <td class="p-3 text-center text-gray-500 text-sm">${groupSTT}</td>
-                    <td class="p-3 text-center">${item.width}</td>
-                    <td class="p-3 text-center">${item.length}</td>
-                    <td class="p-3 text-right font-mono font-medium text-blue-700">${volumeFormatter.format(item.volume)}</td>
-                    <td class="p-3 text-center action-col">
-                        <button onclick="openEditModal(${index})" class="text-blue-500 hover:text-blue-700 mx-1 p-1" title="Sửa"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteItem(${index})" class="text-red-400 hover:text-red-600 mx-1 p-1" title="Xóa"><i class="fas fa-trash"></i></button>
+                    <td class="p-1 text-center text-gray-500 text-sm">${groupSTT}</td>
+                    <td class="p-1 text-center text-sm">${item.width}</td>
+                    <td class="p-1 text-center text-sm">${item.length}</td>
+                    <td class="p-1 text-right font-mono font-medium text-blue-700 text-sm">${volumeFormatter.format(item.volume)}</td>
+                    <td class="p-1 action-col">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="openEditModal(${index})" class="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-100" title="Sửa"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItem(${index})" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-100" title="Xóa"><i class="fas fa-trash"></i></button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
 
+                // 2. Print View Row (Compact Divs)
+                currentGroupHTML += `
+                    <div class="flex justify-between text-[11px] border-b border-dashed border-gray-300 py-[2px]">
+                        <span class="w-8 text-gray-500">${groupSTT}</span>
+                        <span class="w-12 text-center">${item.width}</span>
+                        <span class="w-12 text-center">${item.length}</span>
+                        <span class="text-right flex-1 font-mono">${volumeFormatter.format(item.volume)}</span>
+                    </div>
+                `;
+
                 groupSTT++;
 
-                // Handle subtotal for the very last item
+                // --- HANDLE LAST ITEM ---
                 if (index === items.length - 1) {
-                     const subTr = document.createElement('tr');
-                     // colSpan reduced by 2
-                     subTr.className = "subtotal-row bg-gray-100 font-bold text-gray-700 italic border-b border-gray-300";
-                     subTr.innerHTML = `
-                        <td colspan="3" class="p-2 text-right text-sm">Tổng ${item.type} (${item.thick}mm):</td>
+                    // 1. Screen Table: Last Subtotal
+                    const subTr = document.createElement('tr');
+                    subTr.className = "subtotal-row bg-gray-100 font-bold text-gray-700 italic border-b border-gray-300";
+                    subTr.innerHTML = `
+                        <td colspan="3" class="p-2 text-right text-xs">Tổng ${item.type} (${item.thick}mm):</td>
                         <td class="p-2 text-right text-blue-800 text-sm">${volumeFormatter.format(groupVol)}</td>
                         <td class="action-col no-print"></td>
                     `;
                     tbody.appendChild(subTr);
+
+                    // 2. Print View: Last Subtotal and Close
+                    currentGroupHTML += `
+                        <div class="flex justify-between border-t border-black font-bold mt-1 pt-1">
+                            <span class="text-[10px] italic">Tổng:</span>
+                            <span>${volumeFormatter.format(groupVol)}</span>
+                        </div>
+                    </div>`;
+                    printCols.innerHTML += currentGroupHTML;
                 }
             });
 
-            // ADDED: Create Total Row dynamically at the end of tbody instead of using tfoot
+            // --- FINAL TOTALS ---
+            
+            // 1. Screen Table Total
             const grandTotalTr = document.createElement('tr');
             grandTotalTr.className = "bg-gray-100 border-t-2 border-gray-300 font-bold text-gray-800";
-            // colSpan reduced by 2
             grandTotalTr.innerHTML = `
-                <td colspan="3" class="p-3 text-right uppercase">Tổng cộng tất cả:</td>
+                <td colspan="3" class="p-3 text-right uppercase text-sm">Tổng cộng tất cả:</td>
                 <td class="p-3 text-right text-blue-700 text-lg">${volumeFormatter.format(totalVol)}</td>
                 <td class="action-col no-print"></td>
             `;
             tbody.appendChild(grandTotalTr);
+
+            // 2. Print View Total - Appended to the columns flow
+            const printGrandTotalHTML = `
+                <div class="mt-4 pt-2 border-t-2 border-black flex justify-between items-center text-sm font-bold avoid-break break-inside-avoid">
+                    <span class="uppercase">Tổng cộng toàn bộ:</span>
+                    <span class="text-lg">${volumeFormatter.format(totalVol)} m³</span>
+                </div>
+            `;
+            printCols.innerHTML += printGrandTotalHTML;
         }
 
         function renderSummary() {
