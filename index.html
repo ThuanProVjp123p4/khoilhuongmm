@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Tính Khối Lượng Gỗ</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -65,16 +66,23 @@
             #screenTableContainer {
                 display: none !important;
             }
-            /* Hiển thị giao diện in 2 cột */
+            /* Hiển thị giao diện in */
             #printSection {
                 display: block !important;
             }
             
-            /* Cấu hình chia cột */
-            .print-columns {
+            /* Cấu hình chia cột động */
+            .print-layout-dual {
                 column-count: 2;
                 column-gap: 2rem;
                 width: 100%;
+            }
+            
+            /* In 1 cột: Căn giữa, rộng hơn */
+            .print-layout-single {
+                column-count: 1;
+                width: 95%; /* Tăng độ rộng để tận dụng không gian */
+                margin: 0 auto;
             }
             
             /* Ngăn ngắt dòng giữa chừng trong một khối */
@@ -167,7 +175,7 @@
         
         <!-- Header Print Only -->
         <div class="hidden print-visible p-4 pb-2 border-b text-center mb-4">
-            <h1 class="text-2xl font-bold uppercase">Bảng Kê Chi Tiết</h1>
+            <h1 class="text-2xl font-bold uppercase">Bảng Kê Chi Tiết Gỗ Xẻ</h1>
             <p class="text-sm text-gray-600 mt-1">Ngày: <span id="printDate"></span></p>
         </div>
 
@@ -189,9 +197,9 @@
             </table>
         </div>
 
-        <!-- PRINT SECTION CONTAINER (Chỉ hiển thị khi in - Chia 2 cột) -->
+        <!-- PRINT SECTION CONTAINER (Chỉ hiển thị khi in) -->
         <div id="printSection" class="hidden px-4 pb-4">
-            <div id="printColumns" class="print-columns">
+            <div id="printColumns">
                 <!-- Nội dung in được sinh ra bởi JS -->
             </div>
         </div>
@@ -551,6 +559,17 @@
             emptyState.style.display = 'none';
             emptyState.classList.add('hidden');
 
+            // --- AUTO LAYOUT LOGIC ---
+            // Threshold set to 25 items to switch between 1 column and 2 columns
+            const threshold = 25;
+            const isSingleColumn = items.length <= threshold;
+
+            if (isSingleColumn) {
+                printCols.className = 'print-layout-single';
+            } else {
+                printCols.className = 'print-layout-dual';
+            }
+
             // --- MAIN LOOP ---
             items.forEach((item, index) => {
                 let isNewGroup = false;
@@ -578,12 +597,21 @@
                     tbody.appendChild(subTr);
 
                     // 2. Print View: Close div and append to columns
-                    currentGroupHTML += `
-                        <div class="flex justify-between border-t border-black font-bold mt-1 pt-1">
-                            <span class="text-[10px] italic">Tổng:</span>
-                            <span>${volumeFormatter.format(groupVol)}</span>
-                        </div>
-                    </div>`; // Close group-container
+                    if (isSingleColumn) {
+                         currentGroupHTML += `
+                            <div class="flex justify-between border-t border-black font-bold mt-2 pt-2 bg-gray-50 p-2">
+                                <span class="text-sm italic">Tổng:</span>
+                                <span class="text-sm">${volumeFormatter.format(groupVol)} m³</span>
+                            </div>
+                        </div>`; // Close group-container
+                    } else {
+                         currentGroupHTML += `
+                            <div class="flex justify-between border-t border-black font-bold mt-1 pt-1">
+                                <span class="text-[10px] italic">Tổng:</span>
+                                <span>${volumeFormatter.format(groupVol)}</span>
+                            </div>
+                        </div>`; // Close group-container
+                    }
                     printCols.innerHTML += currentGroupHTML;
 
                     // Reset counters
@@ -604,18 +632,36 @@
                     tbody.appendChild(headerTr);
 
                     // 2. Print View: Start new Block
-                    currentGroupHTML = `
-                    <div class="mb-4 break-inside-avoid avoid-break">
-                        <div class="font-bold border-b border-black text-xs uppercase mb-1">
-                            ${item.type} - ${item.thick}mm
-                        </div>
-                        <div class="flex justify-between text-[10px] text-gray-500 border-b border-gray-200 mb-1 italic">
-                            <span class="w-8">STT</span>
-                            <span class="w-12 text-center">Rộng</span>
-                            <span class="w-12 text-center">Dài</span>
-                            <span class="text-right flex-1">Khối Lượng</span>
-                        </div>
-                    `;
+                    if (isSingleColumn) {
+                        // SINGLE COLUMN MODE: Detailed and Spacious - NO BORDER
+                        currentGroupHTML = `
+                        <div class="mb-6 break-inside-avoid avoid-break">
+                            <div class="font-bold border-b-2 border-black text-sm uppercase mb-3 pb-2 flex justify-between items-end">
+                                <span class="text-lg">${item.type}</span>
+                                <span class="text-gray-600 font-normal">Dày: <b>${item.thick}mm</b></span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-4 text-xs font-bold text-gray-600 border-b border-gray-300 pb-2 mb-2 uppercase tracking-wider">
+                                <div class="text-center">STT</div>
+                                <div class="text-center">Rộng (cm)</div>
+                                <div class="text-center">Dài (x10cm)</div>
+                                <div class="text-right">Khối Lượng (m³)</div>
+                            </div>
+                        `;
+                    } else {
+                        // DUAL COLUMN MODE: Compact
+                        currentGroupHTML = `
+                        <div class="mb-4 break-inside-avoid avoid-break">
+                            <div class="font-bold border-b border-black text-xs uppercase mb-1">
+                                ${item.type} - ${item.thick}mm
+                            </div>
+                            <div class="flex justify-between text-[10px] text-gray-500 border-b border-gray-200 mb-1 italic">
+                                <span class="w-8">STT</span>
+                                <span class="w-12 text-center">Rộng</span>
+                                <span class="w-12 text-center">Dài</span>
+                                <span class="text-right flex-1">Khối Lượng</span>
+                            </div>
+                        `;
+                    }
                 }
 
                 // Update Volumes
@@ -630,14 +676,12 @@
 
                 const tr = document.createElement('tr');
                 tr.className = `${rowClass} border-b border-gray-100`;
-                // Add ID to row for scrolling
                 tr.dataset.id = item.id;
                 tr.onclick = (e) => {
                     if(e.target.closest('button')) return;
                     selectItem(item.id);
                 };
 
-                // Changed p-3 to p-1 for compactness, added flex container for buttons
                 tr.innerHTML = `
                     <td class="p-1 text-center text-gray-500 text-sm">${groupSTT}</td>
                     <td class="p-1 text-center text-sm">${item.width}</td>
@@ -652,15 +696,28 @@
                 `;
                 tbody.appendChild(tr);
 
-                // 2. Print View Row (Compact Divs)
-                currentGroupHTML += `
-                    <div class="flex justify-between text-[11px] border-b border-dashed border-gray-300 py-[2px]">
-                        <span class="w-8 text-gray-500">${groupSTT}</span>
-                        <span class="w-12 text-center">${item.width}</span>
-                        <span class="w-12 text-center">${item.length}</span>
-                        <span class="text-right flex-1 font-mono">${volumeFormatter.format(item.volume)}</span>
-                    </div>
-                `;
+                // 2. Print View Row
+                if (isSingleColumn) {
+                    // SINGLE COLUMN ROW: Grid based, spacious
+                    currentGroupHTML += `
+                        <div class="grid grid-cols-4 gap-4 text-sm py-2 border-b border-dashed border-gray-200 items-center">
+                            <div class="text-center text-gray-500">${groupSTT}</div>
+                            <div class="text-center font-medium">${item.width}</div>
+                            <div class="text-center font-medium">${item.length}</div>
+                            <div class="text-right font-mono font-bold">${volumeFormatter.format(item.volume)}</div>
+                        </div>
+                    `;
+                } else {
+                    // DUAL COLUMN ROW: Compact Flex
+                    currentGroupHTML += `
+                        <div class="flex justify-between text-[11px] border-b border-dashed border-gray-300 py-[2px]">
+                            <span class="w-8 text-gray-500">${groupSTT}</span>
+                            <span class="w-12 text-center">${item.width}</span>
+                            <span class="w-12 text-center">${item.length}</span>
+                            <span class="text-right flex-1 font-mono">${volumeFormatter.format(item.volume)}</span>
+                        </div>
+                    `;
+                }
 
                 groupSTT++;
 
@@ -677,12 +734,21 @@
                     tbody.appendChild(subTr);
 
                     // 2. Print View: Last Subtotal and Close
-                    currentGroupHTML += `
-                        <div class="flex justify-between border-t border-black font-bold mt-1 pt-1">
-                            <span class="text-[10px] italic">Tổng:</span>
-                            <span>${volumeFormatter.format(groupVol)}</span>
-                        </div>
-                    </div>`;
+                    if (isSingleColumn) {
+                        currentGroupHTML += `
+                            <div class="flex justify-between border-t border-black font-bold mt-2 pt-2 bg-gray-50 p-2">
+                                <span class="text-sm italic">Tổng:</span>
+                                <span class="text-sm">${volumeFormatter.format(groupVol)} m³</span>
+                            </div>
+                        </div>`;
+                    } else {
+                        currentGroupHTML += `
+                            <div class="flex justify-between border-t border-black font-bold mt-1 pt-1">
+                                <span class="text-[10px] italic">Tổng:</span>
+                                <span>${volumeFormatter.format(groupVol)}</span>
+                            </div>
+                        </div>`;
+                    }
                     printCols.innerHTML += currentGroupHTML;
                 }
             });
@@ -699,11 +765,11 @@
             `;
             tbody.appendChild(grandTotalTr);
 
-            // 2. Print View Total - Appended to the columns flow
+            // 2. Print View Total
             const printGrandTotalHTML = `
-                <div class="mt-4 pt-2 border-t-2 border-black flex justify-between items-center text-sm font-bold avoid-break break-inside-avoid">
-                    <span class="uppercase">Tổng cộng toàn bộ:</span>
-                    <span class="text-lg">${volumeFormatter.format(totalVol)} m³</span>
+                <div class="mt-4 pt-4 border-t-2 border-black flex justify-between items-center text-sm font-bold avoid-break break-inside-avoid">
+                    <span class="uppercase text-lg">Tổng cộng toàn bộ:</span>
+                    <span class="text-2xl">${volumeFormatter.format(totalVol)} m³</span>
                 </div>
             `;
             printCols.innerHTML += printGrandTotalHTML;
